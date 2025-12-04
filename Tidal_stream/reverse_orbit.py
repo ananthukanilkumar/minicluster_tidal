@@ -1,4 +1,4 @@
-import os, numpy as np, agama, scipy.special, scipy.integrate, matplotlib.pyplot as plt
+import numpy as np, agama
 
 agama.setUnits(length=1, velocity=1, mass=1) #kpc,km/s, Solar mass
 
