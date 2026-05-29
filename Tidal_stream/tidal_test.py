@@ -1,6 +1,6 @@
 import os, numpy as np, agama, scipy.special, scipy.integrate, matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
-import pyfalcon
+#import pyfalcon
 import plotly.express as px
 
 agama.setUnits(length=1, velocity=1, mass=1) #kpc,km/s, Solar mass
@@ -20,8 +20,8 @@ sigma   = lambda r: np.exp(logspl(np.log(r)))
 
 # Minicluster parameters
 mc_mass0=1e-7
-mc_rvir=1e-4
-mc_rs=1e-5
+mc_rvir=1e-7
+mc_rs=1e-8
 Nbody=10000
 
 # Minicluster potential and distribution function

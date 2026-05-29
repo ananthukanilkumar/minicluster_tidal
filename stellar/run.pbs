@@ -1,0 +1,12 @@
+#!/bin/bash                                                                                                                                                                                                                                                                                                                                                             
+
+#PBS -N mc_test                                                                                                                                                                                                                                                                                                                                                        
+#PBS -q physics                                                                                                                                                                                                                                                                                                                                                        
+#PBS -l select=1:ncpus=4:mem=4GB                                                                                                                                                                                                                                                                                                                                       
+#PBS -l walltime=10:00:00                                                                                                                                                                                                                                                                                                                                               
+cd $PBS_O_WORKDIR
+
+export CONDA_PKGS_DIRS=~/.conda/pkgs
+source /usr/physics/python/Anaconda3-2022.10/etc/profile.d/conda.sh
+conda activate minicluster
+python3 test.py

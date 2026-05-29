@@ -1,0 +1,17 @@
+#!/bin/bash
+
+#PBS -N mc_tidal 
+#PBS -q physics
+#PBS -l select=1:ncpus=4:mem=32GB
+#PBS -l walltime=40:00:00
+#PBS -M aani0116@uni.sydney.edu.au
+#PBS -m abe
+
+cd $PBS_O_WORKDIR
+
+export CONDA_PKGS_DIRS=~/.conda/pkgs
+source /usr/physics/python/Anaconda3-2022.10/etc/profile.d/conda.sh
+module load gsl-2.7
+conda activate minicluster
+
+python3 time_test.py
