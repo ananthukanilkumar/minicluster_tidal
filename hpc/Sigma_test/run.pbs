@@ -14,4 +14,4 @@ source /usr/physics/python/Anaconda3-2022.10/etc/profile.d/conda.sh
 module load gsl-2.7
 conda activate minicluster
 
-python3 tidal_split_claude.py
+python3 sigma_test.py
