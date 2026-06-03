@@ -16,7 +16,7 @@ pot_mw = agama.Potential('/suphys/aani0116/minicluster/minicluster_tidal/Agama/d
 
     
 
-mc = Minicluster(mass=1e-9, delta=10, concentration=10)
+mc = Minicluster(mass=1e-8, delta=10, concentration=10)
 Nbody=100000
 pot_mc = agama.Potential(
     type='Multipole',

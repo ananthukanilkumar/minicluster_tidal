@@ -16,8 +16,8 @@ pot_mw = agama.Potential('/suphys/aani0116/minicluster/minicluster_tidal/Agama/d
 
     
 
-mc = Minicluster(mass=1e-10, delta=10, concentration=10)
-Nbody=100000
+mc = Minicluster(mass=1e-9, delta=10, concentration=10)
+Nbody=100
 pot_mc = agama.Potential(
     type='Multipole',
     density='Spheroid',
@@ -33,49 +33,57 @@ pot_mc = agama.Potential(
 df_mc   = agama.DistributionFunction(type='quasispherical', potential=pot_mc)
 mcp_xv, mcp_mass = agama.GalaxyModel(pot_mc, df_mc).sample(Nbody)
 
-
+mcp_xv_snapshots=[mcp_xv.copy()]
+E_p_snapshots=[0.5*np.linalg.norm(mcp_xv[:, 3:6], axis=1)**2+pot_mc.potential(mcp_xv[:, :3])]
+bound_snapshots=[0.5*np.linalg.norm(mcp_xv[:, 3:6], axis=1)**2+pot_mc.potential(mcp_xv[:, :3])<0] 
+n_bound_arr = [np.sum(bound_snapshots[0])]
 
 
 pot_mc = agama.Potential(type='Multipole', particles=(mcp_xv[:, :3], mcp_mass), symmetry='n', rmin=0, rmax=0, gridSizeR=100, lmax=0)
 
 
-solar_pos = np.array([8.0, 0.0, 0.0, 5.0, 5.0, 220.0]) 
+solar_pos = np.array([8.0, 0.0, 0.0, 0.0, 0.0, 220.0]) 
 
-orbit_time = 13
+orbit_time = 1
 
-mc_center=reverse_orbit(solar_pos, pot_mw,orbit_time,4, 10)
+#mc_center=reverse_orbit(solar_pos, pot_mw,orbit_time,4, 10)
+mc_center=np.array([8.0, 0.0, 0.0, 0.0, 0.0, 220.0])
 mc_center_start=mc_center.copy()
 
+mc_xv_snapshots=[mc_center.copy()]
+
+print('mc_center and solar pos', mc_center,solar_pos,Nbody)
 mcp_xv += mc_center 
 
 #simulation parameters
 simulation_time = orbit_time
-tupd = 1e-10 # Gyr
+tupd = 1e-4 # Gyr
 time_i = 0
+snap_times = [time_i]
 
 
 #stuff for saving data
-n_snapshots = 10
-snapshot_times = np.linspace(0, simulation_time, n_snapshots)
+n_snapshots = 9
+snapshot_times = np.linspace(tupd, simulation_time, n_snapshots)
 next_snap = 0
 
-mcp_xv_snapshots=[]
-bound_snapshots, E_p_snapshots, mc_xv_snapshots, snap_times = [], [], [], []
-n_bound_arr = []
 
 
-print(tupd)
+
+print(tupd,'tupd')
 while time_i < simulation_time:
+    print(time_i,'time_i')
 
     mc_time_center, mc_orbit_center = agama.orbit(ic=mc_center, potential=pot_mw, time=tupd,timestart=time_i, trajsize=10, accuracy=1e-10,verbose=False)
 
     pot_total = agama.Potential(pot_mw,agama.Potential(potential=pot_mc,center=np.column_stack((mc_time_center, mc_orbit_center))))
 
-    mcp_xv = np.vstack(agama.orbit(ic=mcp_xv, potential=pot_total,time=tupd, timestart=time_i, trajsize=1, accuracy=1e-10,dtype=float,verbose=False)[:, 1])
+    mcp_xv = np.vstack(agama.orbit(ic=mcp_xv, potential=pot_total,time=tupd, timestart=time_i, trajsize=1, accuracy=1e-10,dtype=float,verbose=True)[:, 1])
 
     rel_pos = mcp_xv[:, :3] - mc_orbit_center[-1][:3]
     rel_vel = mcp_xv[:, 3:6] - mc_orbit_center[-1][3:6]
     rel_xv=mcp_xv-mc_orbit_center[-1]
+    
 
     E_var=0.5*np.linalg.norm(rel_vel, axis=1)**2+pot_mc.potential(rel_pos)
     bound=E_var<0
@@ -83,21 +91,22 @@ while time_i < simulation_time:
     n_bound_arr.append(n_bound)
     if n_bound>32:
         pot_mc = agama.Potential(type='NFW',mass=mc.mass_within_radius(5.4*mc.radius_char),scaleRadius=mc.radius_char,)
-    if n_bound<=32:
+    elif n_bound<=32:
         pot_mc=agama.Potential(type='Plummer', mass=0.0, scaleRadius=1.0)
-        tupd=1e-4
+        #tupd=1e-4
         
 
     
 
     if next_snap < n_snapshots and time_i >= snapshot_times[next_snap]:
+        print(time_i,'time_i')
         mcp_xv_snapshots.append(rel_xv.copy())
+        mc_xv_snapshots.append(mc_orbit_center[-1].copy())
         bound_snapshots.append(bound.copy())
         E_p_snapshots.append(E_var.copy())
-        mc_xv_snapshots.append(mc_orbit_center[-1].copy())
         snap_times.append(time_i)
         next_snap += 1
-        print(f'Snapshot {next_snap} saved at time {time_i:.2f} Gyr with {n_bound} bound particles.')
+        #print(f'Snapshot {next_snap} saved at time {time_i:.2f} Gyr with {n_bound} bound particles.')
 
 
 
@@ -112,7 +121,7 @@ snap_times.append(time_i)
 
 
 
-fname = f'/suphys/aani0116/Work/minicluster_tidal/hpc/Sigma_test/data/mc_m{mc.mass:.1e}_13B_c{mc.concentration}.h5'
+fname = f'/suphys/aani0116/Work/minicluster_tidal/hpc/Sigma_test/data/mc_m100000{mc.mass:.1e}_t{simulation_time}_dt{tupd}_c{mc.concentration}.h5'
 
 with h5py.File(fname, 'w') as f:
     f.create_dataset('mcp_xv', data=np.array(mcp_xv_snapshots, dtype=np.float64))
